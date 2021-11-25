@@ -1,27 +1,26 @@
 FROM adoptopenjdk/openjdk8 as BASE
 
 ARG SBT_VERSION=1.5.5
-WORKDIR /src
-COPY ./ .
 
 # Install sbt
 RUN \
-  mkdir working && \
-  cd working && \
-  curl -L -o sbt-$SBT_VERSION.tgz https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz && \
-  tar -xvzf sbt-$SBT_VERSION.tgz && \
-  cd .. && \
-  cp -r ./working/sbt/bin/. . && \
-  chmod +x -R . && \
-  rm -rf working && \
-  ./sbt --version
+  mkdir /working/ && \
+  cd /working/ && \
+  curl -L -o sbt-$SBT_VERSION.deb https://repo.scala-sbt.org/scalasbt/debian/sbt-$SBT_VERSION.deb && \
+  dpkg -i sbt-$SBT_VERSION.deb && \
+  rm sbt-$SBT_VERSION.deb && \
+  apt-get update && \
+  apt-get install sbt && \
+  cd && \
+  rm -r /working/ && \
+  sbt sbtVersion
 
 
-FROM adoptopenjdk/openjdk8 as COMPILED
+FROM BASE as COMPILED
 
 WORKDIR /src
-COPY --from=BASE /src /src
-RUN ./sbt compile && ./sbt assembly
+COPY ./ .
+RUN sbt compile && sbt assembly
 
 
 FROM adoptopenjdk/openjdk8
