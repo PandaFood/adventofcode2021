@@ -1,0 +1,30 @@
+FROM adoptopenjdk/openjdk8 as BASE
+
+ARG SBT_VERSION=1.5.5
+WORKDIR /src
+COPY ./ .
+
+# Install sbt
+RUN \
+  mkdir working && \
+  cd working && \
+  curl -L -o sbt-$SBT_VERSION.tgz https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz && \
+  tar -xvzf sbt-$SBT_VERSION.tgz && \
+  cd .. && \
+  cp -r ./working/sbt/bin/. . && \
+  chmod +x -R . && \
+  rm -rf working && \
+  ./sbt --version
+
+
+FROM adoptopenjdk/openjdk8 as COMPILED
+
+WORKDIR /src
+COPY --from=BASE /src /src
+RUN ./sbt compile && ./sbt assembly
+
+
+FROM adoptopenjdk/openjdk8
+COPY --from=COMPILED /src/target/scala-3.1.0/main.jar /main.jar
+COPY input.txt .
+CMD java -jar /main.jar
