@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk8 as BASE
+FROM adoptopenjdk/openjdk8 as base
 
 ARG SBT_VERSION=1.5.5
 
@@ -16,7 +16,7 @@ RUN \
   sbt sbtVersion
 
 
-FROM BASE as COMPILED
+FROM base as compiled
 
 WORKDIR /src
 COPY ./ .
@@ -24,6 +24,6 @@ RUN sbt compile && sbt assembly
 
 
 FROM adoptopenjdk/openjdk8
-COPY --from=COMPILED /src/target/scala-3.1.0/main.jar /main.jar
+COPY --from=compiled /src/target/scala-3.1.0/main.jar /main.jar
 COPY input.txt .
 CMD java -jar /main.jar
